@@ -32,9 +32,10 @@ using namespace std;
 	void listarCandidatos();
 	void salvarCandidatosEmArquivo(std::string nomeArquivo);
 	
-  	    void inserirEleitor(string nome, int documento);
-    void eleitoresCadastrados();
-	void listarEleitores();
+  	void CriarEleitores(Fila *F);
+  	void EntrarFila(string nome,int documento);
+  	void eleitoresCadastrados();
+  	void printEleitores();
 
 int main() {
 	setlocale(LC_ALL,"Portuguese");
@@ -111,7 +112,7 @@ int main() {
 
 		case 2:{	/* ####### INICIO AREA DOS ELEITORES ###################################################################### */
 					
-					void listarEleitores() ;
+					printEleitores();
 						break;
 		    	}
 			
@@ -206,55 +207,67 @@ int main() {
     }
     
 /* ####### FUNCOES DO CANDIDATO ###################################################################### */
-	struct Eleitor* eleitor;
+Fila *filaEleitores;
+
+void CriarEleitores(&filaEleitores) {
+    F->inicio=NULL;
+    F->fim=NULL;
+    F->total=0;
+}
 	
-    void inserirEleitor(string nome, int documento) 
-	    {
-	    Eleitor* novoEleitor = new Eleitor();
-	    novoEleitor->nome = nome;
-	    novoEleitor->documento = documento;
-	    novoEleitor->next = eleitor;
-	    eleitor = novoEleitor;
-	    }
+void EntrarFila(filaEleitores,string nome,int documento) 
+{
+	bool *erro;
+    Eleitor *novoEleitor;
+    novoEleitor=(Eleitor*)malloc(sizeof(Eleitor));
+    if (novoEleitor==NULL)
+        *erro=true;
+    else{
+    	*erro=false;
+    	novoEleitor->nome = nome;
+    	novoEleitor->documento = documento;
+    	novoEleitor->next = NULL;
+    	if (filaEleitores->inicio==NULL) // se a fila estiver vazia
+		{
+    		filaEleitores->inicio = novoEleitor;
+    		filaEleitores->fim = novoEleitor;
+    		novoEleitor->next = NULL;
+    		filaEleitores->total++;
+    	}
+    	else
+		{
+			filaEleitores->fim->next = novoEleitor;
+			filaEleitores->fim = novoEleitor;
+			novoEleitor->next = NULL;
+			filaEleitores->total++;
+		} 
+	}
+}
 	
 	void eleitoresCadastrados()
 	{
-		inserirEleitor("Daniel",1111111111);
-		inserirEleitor("Vanessa",2222222222);
-		inserirEleitor("Francisco",3333333333);
-		inserirEleitor("Antonico",4444444444);
-		inserirEleitor("Anna",5555555555);
-		inserirEleitor("Emilia",6666666666);	
+		EntrarFila("Daniel",111111111111);
+		EntrarFila("Vanessa",2222222222);
+		EntrarFila("Francisco",3333333333);
+		EntrarFila("Antonico",4444444444);
+		EntrarFila("Anna",5555555555);
+		EntrarFila("Emilia",6666666666);	
 	}
 	
-	void printFila(Fila *fila)
-    	{
-		Eleitor *aux;
-		aux = fila->inicio;
-		int total = fila->total;
-		cout<<" Eleitores Cadastrados ";
-		while(total>0)
-		{
-			cout << aux->nome<<aux->documento;
-			aux = aux->next;
-			cout << " ";
-			total--;
-		}
-		
-    	}
+	void printEleitores()
+{
+	Eleitor *aux;
+	aux = F->inicio;
+	int total = F->total;
+	cout << "Elementos da Fila (do inicio ao fim): ";
+	while(total>0)
+	{
+		cout << aux->nome<<" "<< aux->documento;
+		aux = aux->next;
+		cout << " ";
+		total--;
+	}
+	
+}
     	
-      void listarEleitores() 
-  {
-        Eleitor* presente = eleitor;
-
-        if (presente == nullptr) {
-            std::cout << "\n Nao ha candidatos registrados." << std::endl;
-        } else {
-        	cout<<"\n----------------------------------------------------------------"<<endl;
-            while (presente != nullptr) {
-                std::cout << " Nome: " << presente->nome << " Documento: " << presente->documento << std::endl;
-                presente = presente->next;
-            }
-            cout<<"----------------------------------------------------------------"<<endl;
-        }
-    }
+  
