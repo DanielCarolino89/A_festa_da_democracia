@@ -112,7 +112,7 @@ int main() {
 		    	}
 			
 		case 3:{	/* ####### INICIO AREA DOS VOTOS ###################################################################### */
-					cout<<"	Documento do eleitor ";
+					cout<<"Documento do eleitor ";
 					cin>>documento;
 					verificaElementoNaFila(documento);
 					break;
@@ -189,7 +189,7 @@ int main() {
 
         if (arquivo.is_open()) {
             Candidato* atual = primeiro;
-			arquivo <<" Candidatos cadastardos: " << std::endl;
+			arquivo <<" Candidatos cadastrados: " << std::endl;
             while (atual != nullptr) {
                 arquivo <<" Nome: "<< atual->nome << " , Numero: " << atual->numero << std::endl;
                 atual = atual->proximo;
