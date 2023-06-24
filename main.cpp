@@ -1,7 +1,7 @@
 #include <iostream>
 #include <locale.h>
 #include <fstream>
-#include <string>
+const int tam = 5; 
 using namespace std;
 
 /*  Daniel de Godoy Carolino -> Projeto: A festa da democracia. */
@@ -14,16 +14,15 @@ using namespace std;
 		Candidato(std::string nome, int numero) : nome(nome), numero(numero), proximo(nullptr) {}
 	};
 	
-	struct Eleitor{
-		string nome;
-		int documento;
-		Eleitor* next;
-		
+	struct Eleitor {
+	    std::string nome;
+	    std::string documento;
 	};
-
-	struct Fila{
-        Eleitor *inicio, *fim;
-        int total;
+	
+	struct Fila {
+	    Eleitor secao[tam];
+	    int inicio;
+	    int fim;
 	};
 	
 	void inserirCandidato(std::string nome, int numero);
@@ -32,17 +31,23 @@ using namespace std;
 	void listarCandidatos();
 	void salvarCandidatosEmArquivo(std::string nomeArquivo);
 	
-  	void CriarEleitores(Fila *F);
-  	void EntrarFila(string nome,int documento);
-  	void eleitoresCadastrados();
-  	void printEleitores();
+	void iniciarFila(Fila& fila);
+	Eleitor inicio(const Fila& fila);
+	void inserirFila(Fila& fila, const std::string& nome, const std::string& documento);
+	void registrandoEleitor();
+	void verificaElementoNaFila(const std::string& documento);
+	void mostrarResultados();
+	void salvarResultadoEmArquivo(std::string nomeArquivo);
+		void exibirEleitor();
 
 int main() {
 	setlocale(LC_ALL,"Portuguese");
 	
 	int op,ac,ae;
-	int numero,idade,documento;
-	string candidato,eleitor;
+	int numero,numeroCandidato;
+	string candidato;
+	string nome,documento;
+	registrandoEleitor();
 
 	
 	do{
@@ -56,29 +61,27 @@ int main() {
 		
 	switch(op){
 
-		case 1:{	/* ####### INICIO √ÅREA DOS CANDIDATOS ###################################################################### */
+		case 1:{	/* ####### INICIO AREA DOS CANDIDATOS ###################################################################### */
 					do{
 						cout<<"\n $$$ AREA DO CANDIDATO $$$ "<<endl;
 						cout<<" 1- INSERIR CANDIDATO "<<endl;
 						cout<<" 2- REMOVER CANDIDATO "<<endl;
 						cout<<" 3- LISTAR CANDIDATOS "<<endl;
-						cout<<" 4- GRAVAR "<<endl;
-						cout<<" 5- Voltar ao menu principal"<<endl;
+						cout<<" 4- Voltar ao menu principal"<<endl;
 						cin>>ac;
 						
 					switch(ac){
-						case 1:
-							{	
+						case 1:{	
 								cout<<"\n Nome do Candidato: ";
 								cin>>candidato;
 								cout<<" Numero do candidato ";
 								cin>>numero;
 							    inserirCandidato(candidato,numero);
+							    salvarCandidatosEmArquivo("CANDIDATOS.txt");
 								break;
 							}
 						
-						case 2:
-							{	
+						case 2:{	
 								cout<<"\n Candidatos ja Cadastrados: ";
 								listarCandidatos();
 								cout<<"\n Numero do Candidato a remover: ";
@@ -86,45 +89,39 @@ int main() {
 								removerCandidato(numero);
 								cout<<"\n Candidatos restantes: ";
 								listarCandidatos();
+								salvarCandidatosEmArquivo("CANDIDATOS.txt");
 							    break;
 							}
-						case 3:
-							{
+						case 3:{
 								listarCandidatos();
 								break;
 							}
-						case 4:
-							{
-								salvarCandidatosEmArquivo("CANDIDATOS.txt");
-								break;
-							}
-						default:
-							{
-								if(ac>5)
+						default:{
+								if(ac>4)
 								cout<<"\n OPCAO INVALIDA! verifique as opcoes."<<endl;
 								cout<<"\n";
 							}
 				}
-				}while(ac!=5);
+				}while(ac!=4);
 				break;
 		    	}
 			
-
 		case 2:{	/* ####### INICIO AREA DOS ELEITORES ###################################################################### */
-					
-					printEleitores();
-						break;
+					exibirEleitor();
+					break;		
 		    	}
 			
-/* ####### INICIO AREA DOS VOTOS ###################################################################### */
-		case 3:
-			{
-				break;
+		case 3:{	/* ####### INICIO AREA DOS VOTOS ###################################################################### */
+					cout<<"	Documento do eleitor ";
+					cin>>documento;
+					verificaElementoNaFila(documento);
+					break;
 			}
 
-/* ####### APURACAO DOS VOTOS! ###################################################################### */
-		case 4:
-			{
+
+		case 4:{	/* ####### APURACAO DOS VOTOS! ###################################################################### */
+				mostrarResultados();
+				salvarResultadoEmArquivo("GANHADOR.txt");
 				break;
 			}
 			
@@ -166,7 +163,6 @@ int main() {
                 delete atual;
                 return;
             }
-
             anterior = atual;
             atual = atual->proximo;
         }
@@ -179,12 +175,12 @@ int main() {
         if (atual == nullptr) {
             std::cout << "\n Nao ha candidatos registrados." << std::endl;
         } else {
-        	cout<<"\n----------------------------------------------------------------"<<endl;
+        	cout<<"--CANDIDATOS------------------"<<endl;
             while (atual != nullptr) {
                 std::cout << " Nome: " << atual->nome << " Numero: " << atual->numero << std::endl;
                 atual = atual->proximo;
             }
-            cout<<"----------------------------------------------------------------"<<endl;
+            cout<<"------------------------------"<<endl;
         }
     }
 	
@@ -193,81 +189,171 @@ int main() {
 
         if (arquivo.is_open()) {
             Candidato* atual = primeiro;
-
+			arquivo <<" Candidatos cadastardos: " << std::endl;
             while (atual != nullptr) {
-                arquivo << atual->nome << " " << atual->numero << std::endl;
+                arquivo <<" Nome: "<< atual->nome << " , Numero: " << atual->numero << std::endl;
                 atual = atual->proximo;
             }
 
             arquivo.close();
             std::cout << "\n Candidatos salvos no arquivo " << nomeArquivo << "." << std::endl;
         } else {
-            std::cout << "\n Nao foi possivel abrir o arquivo " << nomeArquivo << " para salvar os candidatos." << std::endl;
+            std::cout << "\n Erro ao criar o arquivo!" << nomeArquivo << "." << std::endl;
         }
     }
     
-/* ####### FUNCOES DO CANDIDATO ###################################################################### */
-Fila *filaEleitores;
+/* ####### FUNCOES DO ELEITOR ###################################################################### */
 
-void CriarEleitores(&filaEleitores) {
-    F->inicio=NULL;
-    F->fim=NULL;
-    F->total=0;
-}
-	
-void EntrarFila(filaEleitores,string nome,int documento) 
-{
-	bool *erro;
-    Eleitor *novoEleitor;
-    novoEleitor=(Eleitor*)malloc(sizeof(Eleitor));
-    if (novoEleitor==NULL)
-        *erro=true;
-    else{
-    	*erro=false;
-    	novoEleitor->nome = nome;
-    	novoEleitor->documento = documento;
-    	novoEleitor->next = NULL;
-    	if (filaEleitores->inicio==NULL) // se a fila estiver vazia
-		{
-    		filaEleitores->inicio = novoEleitor;
-    		filaEleitores->fim = novoEleitor;
-    		novoEleitor->next = NULL;
-    		filaEleitores->total++;
-    	}
-    	else
-		{
-			filaEleitores->fim->next = novoEleitor;
-			filaEleitores->fim = novoEleitor;
-			novoEleitor->next = NULL;
-			filaEleitores->total++;
-		} 
-	}
-}
-	
-	void eleitoresCadastrados()
-	{
-		EntrarFila("Daniel",111111111111);
-		EntrarFila("Vanessa",2222222222);
-		EntrarFila("Francisco",3333333333);
-		EntrarFila("Antonico",4444444444);
-		EntrarFila("Anna",5555555555);
-		EntrarFila("Emilia",6666666666);	
+	void iniciarFila(Fila& fila){
+		fila.inicio = -1;
+	    fila.fim = -1;
 	}
 	
-	void printEleitores()
-{
-	Eleitor *aux;
-	aux = F->inicio;
-	int total = F->total;
-	cout << "Elementos da Fila (do inicio ao fim): ";
-	while(total>0)
-	{
-		cout << aux->nome<<" "<< aux->documento;
-		aux = aux->next;
-		cout << " ";
-		total--;
+	bool estaVazia(const Fila& fila){
+	    return (fila.inicio == -1 && fila.fim == -1);
 	}
 	
+	bool estaCheia(const Fila& fila){
+	    return (fila.fim == tam - 1);
+	}
+	
+	void inserirFila(Fila& fila, const std::string& nome, const std::string& documento) {
+	    if (estaCheia(fila)) {
+	        std::cout << "Erro: a fila est· cheia!" << std::endl;
+	        return;
+	    }
+	    Eleitor novoEleitor;
+	    novoEleitor.nome = nome;
+	    novoEleitor.documento = documento;
+	    if (estaVazia(fila)) {
+	        fila.inicio = 0;
+	    }
+	    fila.fim++;
+	    fila.secao[fila.fim] = novoEleitor;
+	}
+	
+	void desinserirFila(Fila& fila) {
+	    if (estaVazia(fila)) {
+	        std::cout << "Erro: a fila est· vazia!" << std::endl;
+	        return;
+	    }
+	    if (fila.inicio == fila.fim) {
+	        fila.inicio = -1;
+	        fila.fim = -1;
+	    } else {
+	        fila.inicio++;
+	    }
+	}
+		Eleitor inicio(const Fila& fila) {
+	    if (estaVazia(fila)) {
+	        std::cout << "Erro: a fila est· vazia!" << std::endl;
+	        return Eleitor();
+	    }
+	    return fila.secao[fila.inicio];
+	}
+	
+	void criarArquivoFila(const Fila& fila, const std::string& nomeArquivo) {
+    std::ofstream arquivo(nomeArquivo);
+    if (!arquivo.is_open()) {
+        std::cout << "Erro ao criar o arquivo!" << std::endl;
+        return;
+    }
+    for (int i = fila.inicio; i <= fila.fim; i++) {
+        arquivo << "Nome: " << fila.secao[i].nome << ", Documento: " << fila.secao[i].documento << std::endl;
+    }
+    arquivo.close();
+    std::cout << "\n Eleitores salvos no arquivo " << nomeArquivo << "." << std::endl;
+	}
+	
+	Fila filaEleitor;
+	void registrandoEleitor(){
+	    iniciarFila(filaEleitor);
+	    cout<<" Eleitores cadastrados: "<<endl;
+	    inserirFila(filaEleitor, "Joao", "123456");
+	    inserirFila(filaEleitor, "Maria", "789012");
+	    inserirFila(filaEleitor, "Pedro", "345678");
+	    inserirFila(filaEleitor, "Paulo", "987654");
+	    inserirFila(filaEleitor, "Ana", "321045");
+	    criarArquivoFila(filaEleitor,"ELEITORES.txt");
+	}
+	
+	void exibirEleitor(){
+		for (int i = filaEleitor.inicio; i <= filaEleitor.fim; i++) {
+        std::cout << "Nome: " << filaEleitor.secao[i].nome << ", Documento: " << filaEleitor.secao[i].documento << std::endl;
+	    }
+	}
+
+/* ####### FUNCOES VOTACAO, APURA«√O E RESULTADO ###################################################################### */
+	void votar(int numeroCandidato) {
+    Candidato* candidatoAtual = primeiro;
+    while (candidatoAtual != nullptr) {
+        if (candidatoAtual->numero == numeroCandidato) {
+            candidatoAtual->votos++;
+            cout << "Voto registrado com sucesso!\n";
+            return;
+        }
+        candidatoAtual = candidatoAtual->proximo;
+    }
+    cout << "Candidato n„o encontrado. Voto n„o registrado.\n";
+	};
+	
+	void verificaElementoNaFila(const std::string& documento) {
+	    for (int i = filaEleitor.inicio; i <= filaEleitor.fim; i++) {
+	        if (filaEleitor.secao[i].documento == documento) {
+	        	cout<<"\n Voce esta apto a votar"<<endl;
+				listarCandidatos();
+				int voto;
+				cout<<"\n Qual o numero do seu candidato? ";
+				cin>>voto;
+				votar(voto);
+				break;
+	        }else{
+	        	 cout<<"\n Voce nao esta apto a votar"; 
+	        	 break;
+			}
+	    }
+    }
+    
+    void mostrarResultados() {
+     if (primeiro == nullptr) {
+        std::cout << "A lista de candidatos est· vazia." << std::endl;
+        return;
+    }
+
+    const Candidato* candidatoMaisVotado = primeiro;
+    int maiorNumeroVotos = candidatoMaisVotado->votos;
+
+    const Candidato* candidatoAtual = primeiro->proximo;
+    while (candidatoAtual != nullptr) {
+        if (candidatoAtual->votos > maiorNumeroVotos) {
+            candidatoMaisVotado = candidatoAtual;
+            maiorNumeroVotos = candidatoAtual->votos;
+        }
+        candidatoAtual = candidatoAtual->proximo;
+    }
+
+    std::cout << "\n Candidato com mais votos: " << candidatoMaisVotado->nome << std::endl;
+    std::cout << " N˙mero de votos: " << candidatoMaisVotado->votos << std::endl;
 }
+	   
+	void salvarResultadoEmArquivo(std::string nomeArquivo) {
+        std::ofstream arquivo(nomeArquivo);
+		
+        if (arquivo.is_open()) {
+           Candidato* atual = primeiro;
+			
+			arquivo <<"Resultado das eleicoes: "<<std::endl;
+	    while (primeiro != nullptr) {
+	        arquivo <<"Nome: "<< primeiro->nome << " , Numero: " << primeiro->numero << " Votos: "<< primeiro->votos << std::endl;
+	        primeiro = primeiro->proximo;
+	    }
+	    	
+            arquivo.close();
+            std::cout << "\n Candidatos salvos no arquivo " << nomeArquivo << "." << std::endl;
+        } else {
+            std::cout << "\n Erro ao criar o arquivo!" << nomeArquivo << "." << std::endl;
+        }
+    }
+	
     	
   
