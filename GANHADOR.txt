@@ -1,0 +1,3 @@
+Resultado das eleicoes: 
+Nome: Orlando , Numero: 13 Votos: 0
+Nome: Daniel , Numero: 22 Votos: 1

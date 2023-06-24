@@ -1,0 +1,3 @@
+ Candidatos cadastardos: 
+ Nome: Orlando , Numero: 13
+ Nome: Daniel , Numero: 22
